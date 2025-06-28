@@ -6,9 +6,11 @@ PRODUCTION=${PRODUCTION:-"false"}
 # Go to the directory where the FastAPI application is located
 cd /app/fastapi_app
 
+huggingface-cli login --token "$HUGGINGFACE_TOKEN"
+
 # Run the FastAPI application based on the value of PRODUCTION
 if [ -z "$PRODUCTION" ] || [ "$PRODUCTION" = "false" ]; then
-    fastapi dev --host 0.0.0 --port 8000
+    uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-config="log_config.yaml"
 elif [ "$PRODUCTION" = "true" ]; then
     fastapi run --host 0.0.0.0 --port 8000
 else

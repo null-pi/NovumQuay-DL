@@ -9,8 +9,29 @@ logger = logging.getLogger(__name__)
 class HuggingFaceModelsService:
 
     @staticmethod
+    def check_model_exists(task: str, model: str) -> bool:
+        """
+        Check if a model exists in the Hugging Face Hub for a given task.
+        """
+        try:
+            logger.info(f"Checking if model {model} exists for task {task}")
+            bentoml_model_name = f"{task}_{model.replace('/', '_')}"
+            
+            return bentoml.models.get(bentoml_model_name) is not None
+        except bentoml.exceptions.NotFound:
+            logger.info(f"Model {model} does not exist for task {task}.")
+            return False
+        except Exception as e:
+            logger.error(f"Model {model} does not exist for task {task}: {e}")
+            return False
+
+    @staticmethod
     def import_model(task: str, model: str):
         try:
+            if HuggingFaceModelsService.check_model_exists(task, model):
+                logger.info(f"Model {model} already exists for task {task}. Skipping import.")
+                return
+        
             # Validate task and model, and download the model
             logger.info(f"Importing model: {model} for task: {task}")
             hf_pipeline = pipeline(task=task, model=model)

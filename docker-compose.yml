@@ -1,0 +1,15 @@
+services:
+  core:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: novumquay/model-manager:latest
+    container_name: novumquay-model-manager
+    ports:
+      - "8000:8000"
+    environment:
+      - PRODUCTION=false
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+    volumes:
+      - ./src/bentoml_data:/root/bentoml
+      - ./src/fastapi_app:/app/fastapi_app
