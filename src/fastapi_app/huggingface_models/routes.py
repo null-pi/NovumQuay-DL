@@ -1,6 +1,5 @@
 import logging
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 
 from .service import HuggingFaceModelsService
@@ -11,11 +10,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-
 @router.post("/import")
 async def import_model(body: ModelRequest):
     try:
-        await HuggingFaceModelsService.import_model(task=body.task, model=body.model)
+        HuggingFaceModelsService.import_model(task=body.task, model=body.model) 
 
         return JSONResponse(
             status_code=200,
