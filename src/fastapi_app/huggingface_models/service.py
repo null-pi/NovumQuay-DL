@@ -1,8 +1,10 @@
 import logging
 
-from transformers import pipeline
 import bentoml
 from huggingface_hub import scan_cache_dir
+
+from model_format.service import ModelFormatService
+from .dto import ModelFormat
 
 logger = logging.getLogger(__name__)
 
@@ -22,37 +24,38 @@ class HuggingFaceModelsService:
             logger.info(f"Model {model} does not exist for task {task}.")
             return False
         except Exception as e:
-            logger.error(f"Model {model} does not exist for task {task}: {e}")
-            return False
+            logger.error(f"Error checking {model} for {task}: {e}")
+            raise Exception(f"Error checking model: {e}")
+        
 
     @staticmethod
-    def import_model(task: str, model: str):
+    def import_model(**kwargs):
         try:
+            task: str = kwargs.get("task", None)
+            model: str = kwargs.get("model")
+            format: ModelFormat = kwargs.get("format", ModelFormat.DEFAULT)
+            gguf_filename: str = kwargs.get("gguf_filename", None)
+
+            if model is None:
+                raise ValueError("Model name must be provided.")
+
             if HuggingFaceModelsService.check_model_exists(task, model):
                 logger.info(f"Model {model} already exists for task {task}. Skipping import.")
                 return
-        
-            # Validate task and model, and download the model
-            logger.info(f"Importing model: {model} for task: {task}")
-            hf_pipeline = pipeline(task=task, model=model)
-            logger.info(f"Model {model} imported successfully for task {task}")
-
-            # Save the model using BentoML
-            logger.info(f"Saving model {model} to BentoML with task {task}")
-            bentoml_model_name = f"{task}_{model.replace('/', '_')}"
             
-            saved_model = None 
+            model_format_service = ModelFormatService(format)
             
-            with bentoml.models.create(
-                name=bentoml_model_name
-            ) as bentoml_model_ref:
-                hf_pipeline.save_pretrained(bentoml_model_ref.path)
-                saved_model = bentoml_model_ref
+            if format == ModelFormat.DEFAULT:
+                saved_model = model_format_service.save_model(**kwargs)
+                HuggingFaceModelsService.delete_model_from_hfcache()
+            elif format == ModelFormat.GGUF:
+                saved_model = model_format_service.save_model(**kwargs)
+            else:
+                raise ValueError(f"Unsupported model format: {format}")
 
             logger.info(f"Model {model} saved successfully with BentoML name: {saved_model.tag}")
 
             # Delete the model from Hugging Face cache
-            HuggingFaceModelsService.delete_model_from_hfcache()
             logger.info(f"Model {model} deleted from Hugging Face cache")
         except Exception as e:
             logger.error(f"Error importing model: {e}")

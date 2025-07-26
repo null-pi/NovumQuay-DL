@@ -13,7 +13,7 @@ router = APIRouter()
 @router.post("/import")
 async def import_model(body: ModelRequest):
     try:
-        HuggingFaceModelsService.import_model(task=body.task, model=body.model) 
+        HuggingFaceModelsService.import_model(**body.model_dump()) 
 
         return JSONResponse(
             status_code=200,
