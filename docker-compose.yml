@@ -3,13 +3,18 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    image: novumquay/model-manager:latest
-    container_name: novumquay-model-manager
+    image: ${IMAGE_NAME}
+    container_name: ${CONTAINER_NAME}
     ports:
-      - "8000:8000"
-    environment:
-      - PRODUCTION=false
-      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+      - ${SERVER_PORT}:${SERVER_PORT}
+    env_file:
+      - .env
     volumes:
       - ./src/bentoml_data:/root/bentoml
       - ./src/fastapi_app:/app/fastapi_app
+    networks:
+      - novumquay-network
+
+networks:
+  novumquay-network:
+    external: true

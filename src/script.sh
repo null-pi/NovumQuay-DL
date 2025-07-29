@@ -10,9 +10,9 @@ hf auth login --token "$HUGGINGFACE_TOKEN"
 
 # Run the FastAPI application based on the value of PRODUCTION
 if [ -z "$PRODUCTION" ] || [ "$PRODUCTION" = "false" ]; then
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-config="log_config.yaml"
+    uvicorn main:app --host 0.0.0.0 --port ${SERVER_PORT:-8000} --reload --log-config="log_config.yaml"
 elif [ "$PRODUCTION" = "true" ]; then
-    fastapi run --host 0.0.0.0 --port 8000
+    fastapi run --host 0.0.0.0 --port ${SERVER_PORT:-8000}
 else
     echo "Invalid value for PRODUCTION: $PRODUCTION"
     exit 1
